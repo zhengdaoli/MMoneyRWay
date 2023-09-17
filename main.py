@@ -64,5 +64,40 @@ def main():
     for ticker in tickers:
         load_data_to_snowflake(ticker)
 
+
+import boto3
+
+# ... [Your existing code here] ...
+
+def send_sms_alert(ticker, price, threshold):
+    """
+    Send SMS alert if ticker price is higher than threshold.
+    """
+    sns_client = boto3.client('sns', region_name='YOUR_AWS_REGION')
+    message = f'ALERT: {ticker} price is now ${price}, which is higher than your threshold of ${threshold}.'
+    response = sns_client.publish(
+        PhoneNumber='YOUR_PHONE_NUMBER',
+        Message=message
+    )
+    return response
+
+def monitor_and_alert(ticker_symbol, threshold):
+    today = datetime.date.today()
+    yesterday = today - datetime.timedelta(days=1)
+    
+    stock = yf.Ticker(ticker_symbol)
+    stock_data: DataFrame = stock.history(start=yesterday.strftime('%Y-%m-%d'), end=today.strftime('%Y-%m-%d'))
+
+    # Assuming you're interested in the closing price.
+    today_price = stock_data['Close'].iloc[-1]
+
+    if today_price > threshold:
+        send_sms_alert(ticker_symbol, today_price, threshold)
+
+# ... [The rest of your code here] ...
+
+
+
+
 if __name__ == '__main__':
     main()
